@@ -92,6 +92,7 @@ class ImageDownloader:
             response = requests.get(img_url)
             with open(f"saved_image_{self.current_index}.png", "wb") as file:
                 file.write(response.content)
+        self.skip_image()
 
     def skip_image(self, event=None):
         self.root.after(0, self.next_image)  # Skip to the next image
@@ -130,5 +131,5 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.title("Image Downloader")
     #Do not set num_results (which is the number of google pages) too high or Google will put you in API jail for making too many requests.
-    downloader = ImageDownloader(root, query="Black and White artwork", num_results=25)
+    downloader = ImageDownloader(root, query="Black and White artwork", num_results=5)
     downloader.start()
