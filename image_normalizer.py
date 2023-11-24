@@ -1,7 +1,7 @@
 from PIL import Image
 import os
 
-def resize_images(input_folder, output_folder, target_size=(513, 513)):
+def resize_images(input_folder, output_folder, target_size=(224, 224)):
     # Ensure the output folder exists
     os.makedirs(output_folder, exist_ok=True)
 
