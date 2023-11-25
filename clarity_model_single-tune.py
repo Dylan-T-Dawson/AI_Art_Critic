@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
 from keras.preprocessing.image import ImageDataGenerator
-from keras.applications import ResNet50
+from keras.applications import ResNet50, DenseNet121, Xception
 from keras import layers, models
 from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
 import pandas as pd
@@ -45,7 +45,7 @@ datagen = ImageDataGenerator(
 
 # Define the model with hyperparameters
 def create_model(train_generator, test_generator, dropout, lr, batch_size, dense_units, epochs, optimizer):
-    base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+    base_model = DenseNet121(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
     model = models.Sequential()
     model.add(base_model)
     model.add(layers.GlobalAveragePooling2D())
@@ -99,7 +99,7 @@ def objective(params):
     return {'loss': -accuracy, 'status': STATUS_OK}
 
 # Option to either tune hyperparameters or enter your own
-tune_hyperparameters = True
+tune_hyperparameters = False
 
 if tune_hyperparameters:
     # Define the hyperparameter search space
@@ -122,11 +122,11 @@ if tune_hyperparameters:
 else:
     # Enter your own hyperparameters
     manual_hyperparameters = {
-        'dropout': 0.5,
+        'dropout': 0.75,
         'lr': 0.001,
         'batch_size': 32,
         'dense_units': 256,
-        'epochs': 10,
+        'epochs': 15,
         'optimizer': 'adam'
     }  # Change these values as needed
 
