@@ -25,9 +25,9 @@ def load_data(directory):
 
     return images, labels, label_list
 
-random_state=42
+random_state=30
 
-className = "Detail"
+className = "Clarity"
 
 # Set the path to your dataset
 data_dir = r'AI_Art_Critic/data/' + className
@@ -144,7 +144,7 @@ def objective(params):
     return {'loss': -average_accuracy, 'status': STATUS_OK}
 
 trials = Trials()
-best = fmin(fn=objective, space=space, algo=tpe.suggest, max_evals=2, trials=trials)
+best = fmin(fn=objective, space=space, algo=tpe.suggest, max_evals=5, trials=trials)
 
 # Print the best hyperparameters
 print("Best performing hyperparameters:", best)
@@ -153,7 +153,7 @@ model_save_path = 'AI_Art_Critic/' + className + '.keras'
 
 bestParams = {
     'dropout': best['dropout'],
-    'lr': best['lr'], 
+    'lr': best['lr'],
     'batch_size': batch_size[best['batch_size']],
     'epochs': epochs[best['epochs']],
 }
