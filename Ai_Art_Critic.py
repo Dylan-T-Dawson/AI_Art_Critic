@@ -1,92 +1,44 @@
-import os
-from sklearn.model_selection import train_test_split
-import tensorflow as tf
-from tensorflow import keras
-from keras.preprocessing.image import ImageDataGenerator
-from keras.applications import ResNet50
-from keras import layers, models
-import pandas as pd
+from tkinter import *
+from tkinter import ttk
+from tkinter import filedialog
+from PIL import ImageTk, Image 
+# getting methods from the ML model for use with interface buttons
+# from clarity_model_single_tune import *
 
-# Set the path to your dataset
-data_dir = r'C:\Users\dtda230\Desktop\AI_Art_Critic\data\Clarity'
+# function to browse files on a machine (can only select PNG files with this implementation)
+def browseFiles():
+    filename = filedialog.askopenfilename(initialdir = "/", title = "Select a File", filetypes = ([("Images", "*.PNG*")]))
+    labelFileExplorer.configure(text="File Opened: "+filename)
+    return filename
+    
+# An interface for users to select an image file (.PNG) and have the ML algorithm return a response
+# Takes in an image file, parses the image data, and returns a relevant response
+window = Tk()
+window.title("AI Art Critic")
+window.geometry("500x500")
+mainframe = ttk.Frame(window)
+mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+window.columnconfigure(0, weight=1)
+window.rowconfigure(0, weight=1)
 
-# Function to load images and labels from a directory
-def load_data(directory):
-    images = []
-    labels = []
-    label_dict = {'blurry': 'blurry', 'opaque': 'opaque', 'vivid': 'vivid'}
+# Setting the style of the Tkinter window
+style = ttk.Style()
+style.theme_use('clam')
 
-    for label in label_dict.keys():
-        label_path = os.path.join(directory, label)
-        for filename in os.listdir(label_path):
-            img_path = os.path.join(label_path, filename)
-            images.append(img_path)
-            labels.append(label_dict[label])
+# Create a critique button that runs the ML algorithm 
+# TODO: display the chosen image
+# TODO: add functionality of running the ML algorithm upon clicking (on Critique button)
+ttk.Button(mainframe, text="Critique!").grid(column=3, row=3, sticky=W)
+ttk.Label(mainframe, text="Select an image to critique:").grid(column=3, row=1, sticky=W)
+ttk.Label(mainframe, text="Image Selected:").grid(column=3, row=2, sticky=W)
 
-    return images, labels
+# Creates a button to browse the files on a machine
+browseFilesButton = Button(window, text="Browse Files", command = browseFiles)
+browseFilesButton.grid(column=1, row=1)
+chosenImageWindow = Frame(mainframe).grid(column=3, row=3)
+labelFileExplorer = Label(window, text = "File Explorer")
 
-# Load the paths and labels
-images, labels = load_data(data_dir)
+for child in mainframe.winfo_children(): 
+    child.grid_configure(padx=5, pady=5)
 
-# Split the data into training and testing sets
-train_images, test_images, train_labels, test_labels = train_test_split(images, labels, test_size=0.2, stratify=labels, random_state=42)
-
-# Create a DataFrame from the paths and labels
-train_df = pd.DataFrame({'image_path': train_images, 'label': train_labels})
-test_df = pd.DataFrame({'image_path': test_images, 'label': test_labels})
-
-# Create a data generator for training
-train_datagen = ImageDataGenerator(
-    rescale=1./255,
-    shear_range=0.2,
-    zoom_range=0.2,
-    horizontal_flip=True
-)
-
-# Create a data generator for testing
-test_datagen = ImageDataGenerator(rescale=1./255)
-
-# Load and prepare the training data
-train_generator = train_datagen.flow_from_dataframe(
-    dataframe=train_df,
-    x_col='image_path',
-    y_col='label',
-    target_size=(224, 224),
-    batch_size=32,
-    class_mode='categorical'
-)
-
-# Load and prepare the testing data
-test_generator = test_datagen.flow_from_dataframe(
-    dataframe=test_df,
-    x_col='image_path',
-    y_col='label',
-    target_size=(224, 224),
-    batch_size=32,
-    class_mode='categorical'
-)
-
-# Load the pre-trained ResNet model without the top (fully connected) layers
-base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
-
-# Create a new model on top
-model = models.Sequential()
-model.add(base_model)
-model.add(layers.GlobalAveragePooling2D())
-model.add(layers.Dense(256, activation='relu'))
-model.add(layers.Dropout(0.5))
-model.add(layers.Dense(3, activation='softmax'))  # 3 classes: opaque, blurry, vivid
-
-# Freeze the pre-trained layers
-for layer in base_model.layers:
-    layer.trainable = False
-
-# Compile the model
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-
-# Train the model
-model.fit(train_generator, epochs=10)
-
-# Evaluate the model on the test set
-eval_result = model.evaluate(test_generator)
-print("Test Accuracy:", eval_result[1])
+window.mainloop()
