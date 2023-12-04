@@ -27,7 +27,7 @@ def load_data(directory):
 
 random_state=30
 
-className = "Clarity"
+className = "Perspective"
 
 # Set the path to your dataset
 data_dir = r'AI_Art_Critic/data/' + className
@@ -145,9 +145,6 @@ def objective(params):
 
 trials = Trials()
 best = fmin(fn=objective, space=space, algo=tpe.suggest, max_evals=5, trials=trials)
-
-# Print the best hyperparameters
-print("Best performing hyperparameters:", best)
 
 model_save_path = 'AI_Art_Critic/' + className + '.keras'
 
