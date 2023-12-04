@@ -1,92 +1,72 @@
-import os
-from sklearn.model_selection import train_test_split
-import tensorflow as tf
-from tensorflow import keras
-from keras.preprocessing.image import ImageDataGenerator
-from keras.applications import ResNet50
-from keras import layers, models
-import pandas as pd
+from tkinter import *
+from tkinter import ttk
+from tkinter import filedialog
+from PIL import ImageTk, Image
+import random
 
-# Set the path to your dataset
-data_dir = r'C:\Users\dtda230\Desktop\AI_Art_Critic\data\Clarity'
+def browseFiles():
+    filename = filedialog.askopenfilename(initialdir="/", title="Select a File", filetypes=[("Images", "*.PNG*")])
+    labelFileExplorer.configure(text="File Opened: " + filename)
 
-# Function to load images and labels from a directory
-def load_data(directory):
-    images = []
-    labels = []
-    label_dict = {'blurry': 'blurry', 'opaque': 'opaque', 'vivid': 'vivid'}
+    # Display the selected image
+    image = Image.open(filename)
+    image = image.resize((300, 300))  # Adjust the size as needed
+    img = ImageTk.PhotoImage(image)
 
-    for label in label_dict.keys():
-        label_path = os.path.join(directory, label)
-        for filename in os.listdir(label_path):
-            img_path = os.path.join(label_path, filename)
-            images.append(img_path)
-            labels.append(label_dict[label])
+    # Update the label to show the selected image
+    label_chosen_image.img = img  # To prevent garbage collection
+    label_chosen_image.configure(image=img)
+    label_chosen_image.image = img
 
-    return images, labels
+def generate_random_text():
+    lines = [f"Random Line {i+1}: {random.randint(1, 100)}" for i in range(10)]
+    text_widget.delete(1.0, END)  # Clear existing text
+    for line in lines:
+        text_widget.insert(END, line + "\n")
 
-# Load the paths and labels
-images, labels = load_data(data_dir)
+# Interface for users to select an image file (.PNG) and have the ML algorithm return a response
+window = Tk()
+window.title("AI Art Critic")
+window.geometry("900x600")  # Adjusted window size for a better layout
+window.configure(bg='#f0f0f0')  # Light gray background color
 
-# Split the data into training and testing sets
-train_images, test_images, train_labels, test_labels = train_test_split(images, labels, test_size=0.2, stratify=labels, random_state=42)
+mainframe = ttk.Frame(window, padding="20")
+mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+window.columnconfigure(0, weight=1)
+window.rowconfigure(0, weight=1)
 
-# Create a DataFrame from the paths and labels
-train_df = pd.DataFrame({'image_path': train_images, 'label': train_labels})
-test_df = pd.DataFrame({'image_path': test_images, 'label': test_labels})
+# Setting a new style for the Tkinter window
+style = ttk.Style()
+style.theme_use('clam')
+style.configure('TButton', foreground='#ffffff', background='#4CAF50')  # Green button style
+style.configure('TLabel', foreground='#333333', font=('Helvetica', 12))  # Label style
 
-# Create a data generator for training
-train_datagen = ImageDataGenerator(
-    rescale=1./255,
-    shear_range=0.2,
-    zoom_range=0.2,
-    horizontal_flip=True
-)
+# Labels with a new style
+label_instruction = ttk.Label(mainframe, text="Select an image to critique:", style='TLabel')
+label_instruction.grid(column=3, row=1, sticky=W)
+label_selected_image = ttk.Label(mainframe, text="Image Selected:", style='TLabel')
+label_selected_image.grid(column=3, row=2, sticky=W)
 
-# Create a data generator for testing
-test_datagen = ImageDataGenerator(rescale=1./255)
+# Create a label to display the selected image
+label_chosen_image = Label(mainframe)
+label_chosen_image.grid(column=3, row=3, sticky=W, pady=10)
+label_chosen_image.configure(bg='#f0f0f0')  # Set background color
 
-# Load and prepare the training data
-train_generator = train_datagen.flow_from_dataframe(
-    dataframe=train_df,
-    x_col='image_path',
-    y_col='label',
-    target_size=(224, 224),
-    batch_size=32,
-    class_mode='categorical'
-)
+# Create a critique button that runs the ML algorithm
+critique_button = ttk.Button(mainframe, text="Critique!", style='TButton', command=generate_random_text)
+critique_button.grid(column=3, row=4, sticky=W, pady=10)
 
-# Load and prepare the testing data
-test_generator = test_datagen.flow_from_dataframe(
-    dataframe=test_df,
-    x_col='image_path',
-    y_col='label',
-    target_size=(224, 224),
-    batch_size=32,
-    class_mode='categorical'
-)
+# Create a Text widget to display random text
+text_widget = Text(mainframe, height=20, width=50, wrap=WORD)
+text_widget.grid(column=4, row=3, rowspan=2, pady=10, padx=10, sticky=NW)
 
-# Load the pre-trained ResNet model without the top (fully connected) layers
-base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+# Creates a button to browse the files on a machine
+browse_files_button = Button(window, text="Browse Files", command=browseFiles, bg='#2196F3', fg='#ffffff')  # Blue button style
+browse_files_button.grid(column=1, row=1, pady=10)
 
-# Create a new model on top
-model = models.Sequential()
-model.add(base_model)
-model.add(layers.GlobalAveragePooling2D())
-model.add(layers.Dense(256, activation='relu'))
-model.add(layers.Dropout(0.5))
-model.add(layers.Dense(3, activation='softmax'))  # 3 classes: opaque, blurry, vivid
+labelFileExplorer = Label(window, text="File Explorer", font=('Helvetica', 10), fg='#666666', bg='#f0f0f0')
 
-# Freeze the pre-trained layers
-for layer in base_model.layers:
-    layer.trainable = False
+for child in mainframe.winfo_children():
+    child.grid_configure(padx=10, pady=10)
 
-# Compile the model
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-
-# Train the model
-model.fit(train_generator, epochs=10)
-
-# Evaluate the model on the test set
-eval_result = model.evaluate(test_generator)
-print("Test Accuracy:", eval_result[1])
+window.mainloop()
