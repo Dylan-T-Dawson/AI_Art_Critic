@@ -1,44 +1,72 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
-from PIL import ImageTk, Image 
-# getting methods from the ML model for use with interface buttons
-# from clarity_model_single_tune import *
+from PIL import ImageTk, Image
+import random
 
-# function to browse files on a machine (can only select PNG files with this implementation)
 def browseFiles():
-    filename = filedialog.askopenfilename(initialdir = "/", title = "Select a File", filetypes = ([("Images", "*.PNG*")]))
-    labelFileExplorer.configure(text="File Opened: "+filename)
-    return filename
-    
-# An interface for users to select an image file (.PNG) and have the ML algorithm return a response
-# Takes in an image file, parses the image data, and returns a relevant response
+    filename = filedialog.askopenfilename(initialdir="/", title="Select a File", filetypes=[("Images", "*.PNG*")])
+    labelFileExplorer.configure(text="File Opened: " + filename)
+
+    # Display the selected image
+    image = Image.open(filename)
+    image = image.resize((300, 300))  # Adjust the size as needed
+    img = ImageTk.PhotoImage(image)
+
+    # Update the label to show the selected image
+    label_chosen_image.img = img  # To prevent garbage collection
+    label_chosen_image.configure(image=img)
+    label_chosen_image.image = img
+
+def generate_random_text():
+    lines = [f"Random Line {i+1}: {random.randint(1, 100)}" for i in range(10)]
+    text_widget.delete(1.0, END)  # Clear existing text
+    for line in lines:
+        text_widget.insert(END, line + "\n")
+
+# Interface for users to select an image file (.PNG) and have the ML algorithm return a response
 window = Tk()
 window.title("AI Art Critic")
-window.geometry("500x500")
-mainframe = ttk.Frame(window)
+window.geometry("900x600")  # Adjusted window size for a better layout
+window.configure(bg='#f0f0f0')  # Light gray background color
+
+mainframe = ttk.Frame(window, padding="20")
 mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
 window.columnconfigure(0, weight=1)
 window.rowconfigure(0, weight=1)
 
-# Setting the style of the Tkinter window
+# Setting a new style for the Tkinter window
 style = ttk.Style()
 style.theme_use('clam')
+style.configure('TButton', foreground='#ffffff', background='#4CAF50')  # Green button style
+style.configure('TLabel', foreground='#333333', font=('Helvetica', 12))  # Label style
 
-# Create a critique button that runs the ML algorithm 
-# TODO: display the chosen image
-# TODO: add functionality of running the ML algorithm upon clicking (on Critique button)
-ttk.Button(mainframe, text="Critique!").grid(column=3, row=3, sticky=W)
-ttk.Label(mainframe, text="Select an image to critique:").grid(column=3, row=1, sticky=W)
-ttk.Label(mainframe, text="Image Selected:").grid(column=3, row=2, sticky=W)
+# Labels with a new style
+label_instruction = ttk.Label(mainframe, text="Select an image to critique:", style='TLabel')
+label_instruction.grid(column=3, row=1, sticky=W)
+label_selected_image = ttk.Label(mainframe, text="Image Selected:", style='TLabel')
+label_selected_image.grid(column=3, row=2, sticky=W)
+
+# Create a label to display the selected image
+label_chosen_image = Label(mainframe)
+label_chosen_image.grid(column=3, row=3, sticky=W, pady=10)
+label_chosen_image.configure(bg='#f0f0f0')  # Set background color
+
+# Create a critique button that runs the ML algorithm
+critique_button = ttk.Button(mainframe, text="Critique!", style='TButton', command=generate_random_text)
+critique_button.grid(column=3, row=4, sticky=W, pady=10)
+
+# Create a Text widget to display random text
+text_widget = Text(mainframe, height=20, width=50, wrap=WORD)
+text_widget.grid(column=4, row=3, rowspan=2, pady=10, padx=10, sticky=NW)
 
 # Creates a button to browse the files on a machine
-browseFilesButton = Button(window, text="Browse Files", command = browseFiles)
-browseFilesButton.grid(column=1, row=1)
-chosenImageWindow = Frame(mainframe).grid(column=3, row=3)
-labelFileExplorer = Label(window, text = "File Explorer")
+browse_files_button = Button(window, text="Browse Files", command=browseFiles, bg='#2196F3', fg='#ffffff')  # Blue button style
+browse_files_button.grid(column=1, row=1, pady=10)
 
-for child in mainframe.winfo_children(): 
-    child.grid_configure(padx=5, pady=5)
+labelFileExplorer = Label(window, text="File Explorer", font=('Helvetica', 10), fg='#666666', bg='#f0f0f0')
+
+for child in mainframe.winfo_children():
+    child.grid_configure(padx=10, pady=10)
 
 window.mainloop()
