@@ -8,8 +8,10 @@ from io import BytesIO
 import base64
 import threading
 
+NUM_RESULTS = 40
+
 class ImageDownloader:
-    def __init__(self, root, query, num_results=5):
+    def __init__(self, root, query, num_results=NUM_RESULTS):
         self.root = root
         self.query = query
         self.num_results = num_results
@@ -40,7 +42,8 @@ class ImageDownloader:
     def update_image(self):
         if self.current_index < len(self.image_urls):
             img_url = self.image_urls[self.current_index]
-            threading.Thread(target=self.load_and_display_image, args=(img_url,)).start()
+            # threading.Thread(target=self.load_and_display_image, args=(img_url,)).start()
+            self.load_and_display_image(img_url).start()
         else:
             # Fetch a new set of results and append to the existing list
             new_results = self.download_image_urls(self.query, self.num_results)
@@ -90,7 +93,7 @@ class ImageDownloader:
         if 0 <= self.current_index < len(self.image_urls):
             img_url = self.image_urls[self.current_index]
             response = requests.get(img_url)
-            with open(f"saved_image_{self.current_index}.png", "wb") as file:
+            with open(f"vivid_image_{self.current_index}.png", "wb") as file:
                 file.write(response.content)
         self.skip_image()
 
@@ -131,5 +134,5 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.title("Image Downloader")
     #Do not set num_results (which is the number of google pages) too high or Google will put you in API jail for making too many requests.
-    downloader = ImageDownloader(root, query="Black and White artwork", num_results=5)
+    downloader = ImageDownloader(root, query="dog", num_results=NUM_RESULTS)
     downloader.start()
