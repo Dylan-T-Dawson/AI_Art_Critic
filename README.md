@@ -1,1 +1,0 @@
-# AI_Art_Critic

@@ -1,28 +1,35 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+from image_normalizer import resize_image
+from Classifier import load_and_classify
 from PIL import ImageTk, Image
-import random
+
+globalImage = None
 
 def browseFiles():
+    global globalImage
     filename = filedialog.askopenfilename(initialdir="/", title="Select a File", filetypes=[("Images", "*.PNG*")])
     labelFileExplorer.configure(text="File Opened: " + filename)
 
     # Display the selected image
     image = Image.open(filename)
-    image = image.resize((300, 300))  # Adjust the size as needed
+    image = resize_image(image)
+    globalImage = image
     img = ImageTk.PhotoImage(image)
+    
 
     # Update the label to show the selected image
     label_chosen_image.img = img  # To prevent garbage collection
     label_chosen_image.configure(image=img)
     label_chosen_image.image = img
+    return image
 
 def generate_random_text():
-    lines = [f"Random Line {i+1}: {random.randint(1, 100)}" for i in range(10)]
     text_widget.delete(1.0, END)  # Clear existing text
-    for line in lines:
-        text_widget.insert(END, line + "\n")
+    global globalImage
+    classification = load_and_classify(globalImage)
+    text_widget.insert(END, classification + "\n")
 
 # Interface for users to select an image file (.PNG) and have the ML algorithm return a response
 window = Tk()
